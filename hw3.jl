@@ -45,20 +45,6 @@ _For MIT students:_ there will also be some additional (secret) test cases that 
 Feel free to ask questions!
 """
 
-# ╔═╡ 33e43c7c-f381-11ea-3abc-c942327456b1
-# edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
-
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
-
-# you might need to wait until all other cells in this notebook have completed running. 
-# scroll around the page to see what's up
-
-# ╔═╡ ec66314e-f37f-11ea-0af4-31da0584e881
-md"""
-
-Submission by: **_$(student.name)_** ($(student.kerberos_id)@mit.edu)
-"""
-
 # ╔═╡ 938185ec-f384-11ea-21dc-b56b7469f798
 md"""
 #### Intializing packages
@@ -165,7 +151,7 @@ md"👉 Use `filter` to extract just the characters from our alphabet out of `me
 messy_sentence_1 = "#wow 2020 ¥500 (blingbling!)"
 
 # ╔═╡ 75694166-f998-11ea-0428-c96e1113e2a0
-cleaned_sentence_1 = missing
+cleaned_sentence_1 = filter(isinalphabet,messy_sentence_1)
 
 # ╔═╡ 05f0182c-f999-11ea-0a52-3d46c65a049e
 md"""
@@ -184,7 +170,7 @@ md"👉 Use the function `lowercase` to convert `messy_sentence_2` into a lower 
 messy_sentence_2 = "Awesome! 😍"
 
 # ╔═╡ d3a4820e-f998-11ea-2a5c-1f37e2a6dd0a
-cleaned_sentence_2 = missing
+cleaned_sentence_2 = filter(isinalphabet,lowercase(messy_sentence_2))
 
 # ╔═╡ aad659b8-f998-11ea-153e-3dae9514bfeb
 md"""
@@ -235,7 +221,7 @@ $(html"<br>")
 # ╔═╡ 4affa858-f92e-11ea-3ece-258897c37e51
 function clean(text)
 	
-	return missing
+	return filter(isinalphabet,lowercase(unaccent(text)))
 end
 
 # ╔═╡ e00d521a-f992-11ea-11e0-e9da8255b23b
@@ -281,7 +267,7 @@ $(html"<br>")
 """
 
 # ╔═╡ 92bf9fd2-f9a5-11ea-25c7-5966e44db6c6
-unused_letters = ['a', 'b', 'c'] # replace with your answer
+unused_letters = [alphabet[10],alphabet[17],alphabet[26]] # replace with your answer
 
 # ╔═╡ 01215e9a-f9a9-11ea-363b-67392741c8d4
 md"""
@@ -353,13 +339,13 @@ end
 md"""👉 What is the frequency of the combination `"th"`?"""
 
 # ╔═╡ 1b4c0c28-f9ab-11ea-03a6-69f69f7f90ed
-th_frequency = missing
+th_frequency = sample_freq_matrix[index_of_letter('t'),index_of_letter('h')]
 
 # ╔═╡ 1f94e0a2-f9ab-11ea-1347-7dd906ebb09d
 md"""👉 What about `"ht"`?"""
 
 # ╔═╡ 41b2df7c-f931-11ea-112e-ede3b16f357a
-ht_frequency = missing
+ht_frequency = sample_freq_matrix[index_of_letter('h'),index_of_letter('t')]
 
 # ╔═╡ 1dd1e2f4-f930-11ea-312c-5ff9e109c7f6
 md"""
@@ -367,7 +353,7 @@ md"""
 """
 
 # ╔═╡ 65c92cac-f930-11ea-20b1-6b8f45b3f262
-double_letters = ['a', 'b', 'c'] # replace with your answer
+double_letters = [alphabet[i] for i in 1:27 if sample_freq_matrix[i,i]!=0]
 
 # ╔═╡ 4582ebf4-f930-11ea-03b2-bf4da1a8f8df
 md"""
@@ -377,7 +363,15 @@ _You are free to do this partially by hand, partially using code, whatever is ea
 """
 
 # ╔═╡ 7898b76a-f930-11ea-2b7e-8126ec2b8ffd
-most_likely_to_follow_w = 'x' # replace with your answer
+begin
+	# https://stackoverflow.com/questions/41636928/julia-find-the-indices-of-all-maxima
+	find_index(A) = findall(A .== maximum(A))
+	
+	freq_begin_w = sample_freq_matrix[index_of_letter('w'),[i for i in 1:27]]
+
+	most_likely_to_follow_w = alphabet[find_index(freq_begin_w)[1]]
+	
+end
 
 # ╔═╡ 458cd100-f930-11ea-24b8-41a49f6596a0
 md"""
@@ -387,7 +381,10 @@ _You are free to do this partially by hand, partially using code, whatever is ea
 """
 
 # ╔═╡ bc401bee-f931-11ea-09cc-c5efe2f11194
-most_likely_to_precede_w = 'x' # replace with your answer
+begin
+	freq_end_w = sample_freq_matrix[[i for i in 1:27],index_of_letter('w')]
+	most_likely_to_precede_w = alphabet[find_index(freq_end_w)[1]]
+end
 
 # ╔═╡ 45c20988-f930-11ea-1d12-b782d2c01c11
 md"""
@@ -395,15 +392,18 @@ md"""
 """
 
 # ╔═╡ 58428158-84ac-44e4-9b38-b991728cd98a
-row_sums = missing
+row_sums = sum(sample_freq_matrix, dims=1)
 
 # ╔═╡ 4a0314a6-7dc0-4ee9-842b-3f9bd4d61fb1
-col_sums = missing
+col_sums = sum(sample_freq_matrix, dims=2)
+
+# ╔═╡ 31c03058-ce35-4754-9972-2fdd004f34f6
+matrix_sums = sum(sample_freq_matrix)
 
 # ╔═╡ cc62929e-f9af-11ea-06b9-439ac08dcb52
 row_col_answer = md"""
 
-Blablabla
+Row sum appx equal to col sum, I guess could be that alphabet's *frequency*?? 
 """
 
 # ╔═╡ 2f8dedfc-fb98-11ea-23d7-2159bdb6a299
@@ -489,7 +489,8 @@ The only question left is: How do we compare two matrices? When two matrices are
 # ╔═╡ 13c89272-f934-11ea-07fe-91b5d56dedf8
 function matrix_distance(A, B)
 
-	return missing # do something with A .- B
+	return sum(map(abs,A .- B))
+	# return sum([abs(i) for i in A .- B])
 end
 
 # ╔═╡ 7d60f056-f931-11ea-39ae-5fa18a955a77
@@ -599,8 +600,11 @@ ngrams([1, 2, 3, 42], 2) == bigrams([1, 2, 3, 42])
 
 # ╔═╡ 7be98e04-fb6b-11ea-111d-51c48f39a4e9
 function ngrams(words, n)
+	starting_positions = 1:length(words)-n+1
 	
-	return missing
+	map(starting_positions) do i
+		words[i:i+n-1]
+	end
 end
 
 # ╔═╡ 052f822c-fb7b-11ea-382f-af4d6c2b4fdb
@@ -645,6 +649,9 @@ healthy = Dict("fruits" => ["🍎", "🍊"], "vegetables" => ["🌽", "🎃", "�
 # ╔═╡ c83b1770-fb82-11ea-20a6-3d3a09606c62
 healthy["fruits"]
 
+# ╔═╡ 7f80119d-e956-426b-8ebf-4884f61e7ff1
+healthy["haha"]=>0
+
 # ╔═╡ 52970ac4-fb82-11ea-3040-8bd0590348d2
 md"""
 (Did you notice something funny? The dictionary is _unordered_, this is why the entries were printed in reverse from the definition.)
@@ -672,7 +679,13 @@ Dict(
 function word_counts(words::Vector)
 	counts = Dict()
 	
-	# your code here
+	for i in words
+		if haskey(counts, i)
+			counts[i] += 1
+		else 
+			counts[i]=1
+		end
+	end
 	
 	return counts
 end
@@ -686,7 +699,7 @@ md"""
 """
 
 # ╔═╡ 953363dc-fb84-11ea-1128-ebdfaf5160ee
-emma_count = missing
+emma_count = word_counts(emma_words)["Emma"]
 
 # ╔═╡ 294b6f50-fb84-11ea-1382-03e9ab029a2d
 md"""
@@ -712,13 +725,28 @@ If the same n-gram occurs multiple times (e.g. "said Emma laughing"), then the l
 👉 Write the function `completion_cache`, which takes an array of ngrams (i.e. an array of arrays of words, like the result of your `ngram` function), and returns a dictionary like described above.
 """
 
+# ╔═╡ 16f6b8d2-c9f1-4e9f-bd4e-c6f0ddff89db
+ngrams(split("to be or not to be that is the question", " "), 3)
+
 # ╔═╡ b726f824-fb5e-11ea-328e-03a30544037f
 function completion_cache(grams)
 	cache = Dict()
 	
-	# your code here
+	n = size(grams[1])[1]
 	
-	cache
+	for i in grams
+		
+		k = i[1:n-1]
+		v = i[n]
+	
+		if haskey(cache, k)
+			append!(cache[k],[v])
+		else
+			cache[k] = [v]
+		end
+	end
+	
+	return cache
 end
 
 # ╔═╡ 18355314-fb86-11ea-0738-3544e2e3e816
@@ -826,17 +854,6 @@ md"""
 Uncomment the cell below to generate some Jane Austen text:
 """
 
-# ╔═╡ 49b69dc2-fb8f-11ea-39af-030b5c5053c3
-# generate(emma, 100; n=4) |> Quote
-
-# ╔═╡ cc07f576-fbf3-11ea-2c6f-0be63b9356fc
-if student.name == "Jazzy Doe"
-	md"""
-	!!! danger "Before you submit"
-	    Remember to fill in your **name** and **Kerberos ID** at the top of this notebook.
-	"""
-end
-
 # ╔═╡ 6b4d6584-f3be-11ea-131d-e5bdefcc791b
 md"## Function library
 
@@ -880,6 +897,9 @@ generate(
 	n=generate_sample_n_words, 
 	use_words=true
 ) |> Quote
+
+# ╔═╡ 49b69dc2-fb8f-11ea-39af-030b5c5053c3
+generate(emma, 100; n=5) |> Quote
 
 # ╔═╡ ddef9c94-fb96-11ea-1f17-f173a4ff4d89
 function compimg(img, labels=[c*d for c in replace(alphabet, ' ' => "_"), d in replace(alphabet, ' ' => "_")])
@@ -1245,9 +1265,7 @@ bigbreak
 
 # ╔═╡ Cell order:
 # ╟─e6b6760a-f37f-11ea-3ae1-65443ef5a81a
-# ╟─ec66314e-f37f-11ea-0af4-31da0584e881
 # ╟─85cfbd10-f384-11ea-31dc-b5693630a4c5
-# ╠═33e43c7c-f381-11ea-3abc-c942327456b1
 # ╟─938185ec-f384-11ea-21dc-b56b7469f798
 # ╠═a4937996-f314-11ea-2ff9-615c888afaa8
 # ╟─c086bd1e-f384-11ea-3b26-2da9e24360ca
@@ -1325,7 +1343,7 @@ bigbreak
 # ╟─489fe282-f931-11ea-3dcb-35d4f2ac8b40
 # ╟─1dd1e2f4-f930-11ea-312c-5ff9e109c7f6
 # ╠═65c92cac-f930-11ea-20b1-6b8f45b3f262
-# ╠═671525cc-f930-11ea-0e71-df9d4aae1c05
+# ╟─671525cc-f930-11ea-0e71-df9d4aae1c05
 # ╟─7711ecc5-9132-4223-8ed4-4d0417b5d5c1
 # ╟─4582ebf4-f930-11ea-03b2-bf4da1a8f8df
 # ╠═7898b76a-f930-11ea-2b7e-8126ec2b8ffd
@@ -1336,16 +1354,17 @@ bigbreak
 # ╟─45c20988-f930-11ea-1d12-b782d2c01c11
 # ╠═58428158-84ac-44e4-9b38-b991728cd98a
 # ╠═4a0314a6-7dc0-4ee9-842b-3f9bd4d61fb1
+# ╠═31c03058-ce35-4754-9972-2fdd004f34f6
 # ╠═cc62929e-f9af-11ea-06b9-439ac08dcb52
 # ╟─d3d7bd9c-f9af-11ea-1570-75856615eb5d
 # ╟─2f8dedfc-fb98-11ea-23d7-2159bdb6a299
 # ╟─b7446f34-f9b1-11ea-0f39-a3c17ba740e5
 # ╟─4f97b572-f9b0-11ea-0a99-87af0797bf28
-# ╟─46c905d8-f9b0-11ea-36ed-0515e8ed2621
+# ╠═46c905d8-f9b0-11ea-36ed-0515e8ed2621
 # ╟─4e8d327e-f9b0-11ea-3f16-c178d96d07d9
-# ╟─489b03d4-f9b0-11ea-1de0-11d4fe4e7c69
+# ╠═489b03d4-f9b0-11ea-1de0-11d4fe4e7c69
 # ╟─d83f8bbc-f9af-11ea-2392-c90e28e96c65
-# ╟─fd202410-f936-11ea-1ad6-b3629556b3e0
+# ╠═fd202410-f936-11ea-1ad6-b3629556b3e0
 # ╟─0e465160-f937-11ea-0ebb-b7e02d71e8a8
 # ╟─6718d26c-f9b0-11ea-1f5a-0f22f7ddffe9
 # ╟─141af892-f933-11ea-1e5f-154167642809
@@ -1379,6 +1398,7 @@ bigbreak
 # ╟─47836744-fb7e-11ea-2305-3fa5819dc154
 # ╠═df4fc31c-fb81-11ea-37b3-db282b36f5ef
 # ╠═c83b1770-fb82-11ea-20a6-3d3a09606c62
+# ╠═7f80119d-e956-426b-8ebf-4884f61e7ff1
 # ╟─52970ac4-fb82-11ea-3040-8bd0590348d2
 # ╠═8ce3b312-fb82-11ea-200c-8d5b12f03eea
 # ╠═a2214e50-fb83-11ea-3580-210f12d44182
@@ -1387,24 +1407,24 @@ bigbreak
 # ╠═953363dc-fb84-11ea-1128-ebdfaf5160ee
 # ╟─b8af4d06-b38a-4675-9399-81fb5977f077
 # ╟─294b6f50-fb84-11ea-1382-03e9ab029a2d
+# ╠═16f6b8d2-c9f1-4e9f-bd4e-c6f0ddff89db
 # ╠═b726f824-fb5e-11ea-328e-03a30544037f
 # ╠═18355314-fb86-11ea-0738-3544e2e3e816
 # ╟─472687be-995a-4cf9-b9f6-6b56ae159539
 # ╠═abe2b862-fb69-11ea-08d9-ebd4ba3437d5
 # ╟─3d105742-fb8d-11ea-09b0-cd2e77efd15c
-# ╟─a72fcf5a-fb62-11ea-1dcc-11451d23c085
-# ╟─f83991c0-fb7c-11ea-0e6f-1f80709d00c1
-# ╟─4b27a89a-fb8d-11ea-010b-671eba69364e
+# ╠═a72fcf5a-fb62-11ea-1dcc-11451d23c085
+# ╠═f83991c0-fb7c-11ea-0e6f-1f80709d00c1
+# ╠═4b27a89a-fb8d-11ea-010b-671eba69364e
 # ╟─d7b7a14a-fb90-11ea-3e2b-2fd8f379b4d8
 # ╟─1939dbea-fb63-11ea-0bc2-2d06b2d4b26c
 # ╟─70169682-fb8c-11ea-27c0-2dad2ff3080f
 # ╠═b5dff8b8-fb6c-11ea-10fc-37d2a9adae8c
 # ╟─402562b0-fb63-11ea-0769-375572cc47a8
-# ╟─ee8c5808-fb5f-11ea-19a1-3d58217f34dc
+# ╠═ee8c5808-fb5f-11ea-19a1-3d58217f34dc
 # ╟─2521bac8-fb8f-11ea-04a4-0b077d77529e
 # ╠═49b69dc2-fb8f-11ea-39af-030b5c5053c3
 # ╟─7f341c4e-fb54-11ea-1919-d5421d7a2c75
-# ╟─cc07f576-fbf3-11ea-2c6f-0be63b9356fc
 # ╟─6b4d6584-f3be-11ea-131d-e5bdefcc791b
 # ╟─54b1e236-fb53-11ea-3769-b382ef8b25d6
 # ╟─b7803a28-fb96-11ea-3e30-d98eb322d19a
