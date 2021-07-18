@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.0
+# v0.14.8
 
 using Markdown
 using InteractiveUtils
@@ -42,20 +42,6 @@ This notebook contains _built-in, live answer checks_! In some exercises you wil
 _For MIT students:_ there will also be some additional (secret) test cases that will be run as part of the grading process, and we will look at your notebook and write comments.
 
 Feel free to ask questions!
-"""
-
-# ╔═╡ 33e43c7c-f381-11ea-3abc-c942327456b1
-# edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
-
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
-
-# you might need to wait until all other cells in this notebook have completed running. 
-# scroll around the page to see what's up
-
-# ╔═╡ ec66314e-f37f-11ea-0af4-31da0584e881
-md"""
-
-Submission by: **_$(student.name)_** ($(student.kerberos_id)@mit.edu)
 """
 
 # ╔═╡ 938185ec-f384-11ea-21dc-b56b7469f798
@@ -248,8 +234,33 @@ md"""
 # ╔═╡ abf20aa0-f31b-11ea-2548-9bea4fab4c37
 function greedy_seam(energies, starting_pixel::Int)
 	m,n = size(energies)
-	# you can delete the body of this function - it's just a placeholder.
-	random_seam(size(energies)..., starting_pixel)
+	# # you can delete the body of this function - it's just a placeholder.
+	# random_seam(size(energies)..., starting_pixel)
+	
+	
+	result = zeros(Int,m)
+	
+	result[1] = starting_pixel
+	
+	min_index =1
+	
+	for i in 2:m
+		min_value=1
+		for j in starting_pixel-1:starting_pixel+1
+			j = clamp(j,1,n)
+			if energies[i,j]<min_value
+				min_value = energies[i,j]
+				min_index = j
+			end
+		end
+		starting_pixel = min_index
+		
+		result[i] = min_index
+			
+	end
+	result
+
+	
 end
 
 # ╔═╡ 5430d772-f397-11ea-2ed8-03ee06d02a22
@@ -333,7 +344,7 @@ md"""
 👉 Define a `least_energy` function which returns:
 1. the lowest possible total energy for a seam starting at the pixel at $(i, j)$;
 2. the column to jump to on the next move (in row $i + 1$),
-which is one of $j-1$, $j$ or $j+1$, up to boundary conditions.
+which is one of $j-1$, $j$ or $j + 1$, up to boundary conditions.
 
 Return these two values in a tuple.
 """
@@ -341,8 +352,6 @@ Return these two values in a tuple.
 # ╔═╡ 8ec27ef8-f320-11ea-2573-c97b7b908cb7
 ## returns lowest possible sum energy at pixel (i, j), and the column to jump to in row i+1.
 function least_energy(energies, i, j)
-	m, n = size(energies)
-	
 	## base case
 	# if i == something
 	#    return (energies[...], ...) # no need for recursive computation in the base case!
@@ -350,10 +359,29 @@ function least_energy(energies, i, j)
 	
 	## induction
 	# combine results from recursive calls to `least_energy`.
+	
+	m, n = size(energies)
+	origin = energies[i,j]
+	
+	if i == m
+		return origin,j
+	end
+	
+	lower = clamp(j-1,1,n)
+	upper = clamp(j+1,1,n)
+	
+	return min(
+		
+		((least_energy(energies, i+1 ,j))[1]+origin,j),
+		((least_energy(energies, i+1 ,lower))[1]+origin,lower),
+		((least_energy(energies, i+1 ,upper))[1]+origin,upper)
+		
+		)
+	
 end
 
 # ╔═╡ ad524df7-29e2-4f0d-ad72-8ecdd57e4f02
-least_energy(grant_example, 1, 4)
+least_energy(grant_example, 1,4) 
 
 # ╔═╡ 1add9afd-5ff5-451d-ad81-57b0e929dfe8
 grant_example
@@ -426,7 +454,17 @@ This will give you the method used in the lecture to perform [exhaustive search 
 function recursive_seam(energies, starting_pixel)
 	m, n = size(energies)
 	# Replace the following line with your code.
-	[rand(1:starting_pixel) for i=1:m]
+	# [rand(1:starting_pixel) for i=1:m]
+	
+	result = [starting_pixel]
+	last_pos = starting_pixel
+	for i in 1:m-1
+		
+		append!(result,least_energy(energies, i, last_pos)[2])
+		last_pos = least_energy(energies, i, last_pos)[2]
+		
+	end
+	result
 end
 
 # ╔═╡ f92ac3e4-fa70-4bcf-bc50-a36792a8baaa
@@ -436,6 +474,9 @@ We won't use this function to shrink our larger image, because it is too ineffic
 
 # ╔═╡ 7ac5eb8d-9dba-4700-8f3a-1e0b2addc740
 recursive_seam_test = recursive_seam(grant_example, 4)
+
+# ╔═╡ 6f9b88c9-c037-4cc2-92fb-2efdb838c49c
+grant_example_optimal_seam
 
 # ╔═╡ c572f6ce-f372-11ea-3c9a-e3a21384edca
 md"""
@@ -447,7 +488,9 @@ md"""
 
 # ╔═╡ 6d993a5c-f373-11ea-0dde-c94e3bbd1552
 exhaustive_observation = md"""
-<your answer here>
+
+- It has to compare(compute) 3 branches all the way to the bottom for each start point
+- For $m*n$ each m row have 3 sub-branch, it is $3\times3\times3\times3\times...\times3$ So it is $O(3^N)$.
 """
 
 # ╔═╡ ea417c2a-f373-11ea-3bb0-b1b5754f2fac
@@ -486,6 +529,25 @@ function memoized_least_energy(energies, i, j, memory::Dict)
 	
 	# you should start by copying the code from 
 	# your (not-memoized) least_energies function.
+	
+	
+	m, n = size(energies)
+	origin = energies[i,j]
+	
+	if i == m
+		return origin,j
+	end
+	
+	lower = clamp(j-1,1,n)
+	upper = clamp(j+1,1,n)
+	
+	return min(
+		
+		((least_energy(energies, i+1 ,j))[1]+origin,j),
+		((least_energy(energies, i+1 ,lower))[1]+origin,lower),
+		((least_energy(energies, i+1 ,upper))[1]+origin,upper)
+		
+		)
 	
 end
 
@@ -552,7 +614,7 @@ function matrix_memoized_seam(energies, starting_pixel)
 	m, n = size(energies)
 	
 	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+	# [starting_pixel for i=1:m]
 	
 	
 end
@@ -577,13 +639,35 @@ Now it's easy to see that the above algorithm is equivalent to one that populate
 
 # ╔═╡ ff055726-f320-11ea-32f6-2bf38d7dd310
 function least_energy_matrix(energies)
-	result = copy(energies)
-	m,n = size(energies)
+# 	result = copy(energies)
+# 	m,n = size(energies)
 	
-	# your code here
+# 	# your code here
 	
 	
-	return result
+# 	return result
+	
+	
+	least_E = zeros(size(energies))
+	dirs = zeros(Int, size(energies))
+	
+	least_E[end, :] .= energies[end, :]
+
+	m, n = size(energies)
+	
+	for i in m-1:-1:1
+		for j in 1:n
+			
+			j1, j2 = max(1, j-1), min(j+1, n)
+			e, dir = findmin(least_E[i+1, j1:j2])
+			least_E[i,j] += e
+			least_E[i,j] += energies[i,j]
+			dirs[i, j] = (-1,0,1)[dir + (j==1)]
+			
+		end
+	end
+	
+	return least_E
 end
 
 # ╔═╡ d3e69cf6-61b1-42fc-9abd-42d1ae7d61b2
@@ -613,7 +697,9 @@ function seam_from_precomputed_least_energy(energies, starting_pixel::Int)
 	m, n = size(least_energies)
 	
 	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+	# [starting_pixel for i=1:m]
+	
+	
 	
 end
 
@@ -621,14 +707,6 @@ end
 begin
 	img, seam_from_precomputed_least_energy
 	md"Compute shrunk image: $(@bind shrink_bottomup CheckBox())"
-end
-
-# ╔═╡ 0fbe2af6-f381-11ea-2f41-23cd1cf930d9
-if student.kerberos_id === "jazz"
-	md"""
-!!! danger "Oops!"
-    **Before you submit**, remember to fill in your name and kerberos ID at the top of this notebook!
-	"""
 end
 
 # ╔═╡ 6b4d6584-f3be-11ea-131d-e5bdefcc791b
@@ -909,9 +987,7 @@ bigbreak
 
 # ╔═╡ Cell order:
 # ╟─e6b6760a-f37f-11ea-3ae1-65443ef5a81a
-# ╟─ec66314e-f37f-11ea-0af4-31da0584e881
 # ╟─85cfbd10-f384-11ea-31dc-b5693630a4c5
-# ╠═33e43c7c-f381-11ea-3abc-c942327456b1
 # ╟─938185ec-f384-11ea-21dc-b56b7469f798
 # ╠═a4937996-f314-11ea-2ff9-615c888afaa8
 # ╟─0f271e1d-ae16-4eeb-a8a8-37951c70ba31
@@ -952,7 +1028,7 @@ bigbreak
 # ╟─5430d772-f397-11ea-2ed8-03ee06d02a22
 # ╟─6f52c1a2-f395-11ea-0c8a-138a77f03803
 # ╠═5057652e-2f88-40f1-82f0-55b1b5bca6f6
-# ╠═2a7e49b8-f395-11ea-0058-013e51baa554
+# ╟─2a7e49b8-f395-11ea-0058-013e51baa554
 # ╟─2643b00d-2bac-4868-a832-5fb8ad7f173f
 # ╟─a4d14606-7e58-4770-8532-66b875c97b70
 # ╠═38f70c35-2609-4599-879d-e032cd7dc49d
@@ -982,7 +1058,8 @@ bigbreak
 # ╠═85033040-f372-11ea-2c31-bb3147de3c0d
 # ╟─f92ac3e4-fa70-4bcf-bc50-a36792a8baaa
 # ╠═7ac5eb8d-9dba-4700-8f3a-1e0b2addc740
-# ╠═9ff0ce41-327f-4bf0-958d-309cd0c0b6e5
+# ╠═6f9b88c9-c037-4cc2-92fb-2efdb838c49c
+# ╟─9ff0ce41-327f-4bf0-958d-309cd0c0b6e5
 # ╟─c572f6ce-f372-11ea-3c9a-e3a21384edca
 # ╠═6d993a5c-f373-11ea-0dde-c94e3bbd1552
 # ╟─ea417c2a-f373-11ea-3bb0-b1b5754f2fac
@@ -1020,7 +1097,6 @@ bigbreak
 # ╟─51e28596-f3c5-11ea-2237-2b72bbfaa001
 # ╟─0a10acd8-f3c6-11ea-3e2f-7530a0af8c7f
 # ╟─946b69a0-f3a2-11ea-2670-819a5dafe891
-# ╟─0fbe2af6-f381-11ea-2f41-23cd1cf930d9
 # ╟─48089a00-f321-11ea-1479-e74ba71df067
 # ╟─6b4d6584-f3be-11ea-131d-e5bdefcc791b
 # ╟─437ba6ce-f37d-11ea-1010-5f6a6e282f9b
