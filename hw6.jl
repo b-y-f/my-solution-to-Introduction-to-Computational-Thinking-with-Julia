@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.0
+# v0.15.1
 
 using Markdown
 using InteractiveUtils
@@ -77,6 +77,14 @@ function counts(data::Vector)
 	counts = Dict{Int, Int}()
 	
 	# your code here
+	for i in data
+		if haskey(counts, i)
+			counts[i] += 1
+		else
+			counts[i] = 1
+		end
+	end
+		
 	
 	return counts
 end
@@ -106,10 +114,10 @@ We are going to make a new version `counts2` where you do the following (below).
 """
 
 # ╔═╡ 4bbbbd24-d592-4ce3-a619-b7f760672b99
-
+ks = collect(keys(test_counts ))
 
 # ╔═╡ 44d0f365-b2a8-41a2-98d3-0aa34e8c80c0
-
+vs = collect(values(test_counts ))
 
 # ╔═╡ 18094d52-8c4d-11eb-0620-d30c24a8c75e
 md"""
@@ -117,7 +125,7 @@ md"""
 """
 
 # ╔═╡ c825f913-9545-4dbd-96f9-5f7621fc242d
-
+perm = sortperm(ks)
 
 # ╔═╡ 180fc1d2-8c4d-11eb-0362-230d84d47c7f
 md"""
@@ -128,10 +136,10 @@ md"""
 """
 
 # ╔═╡ fde456e5-9985-4939-af59-9b9a92313b61
-
+ks[perm]
 
 # ╔═╡ cc6923ff-09e0-44cc-9385-533182c4382d
-
+vs[perm]
 
 # ╔═╡ 18103c98-8c4d-11eb-2bed-ed20aba64ae6
 md"""
@@ -146,7 +154,14 @@ md"""
 # ╔═╡ 156c1bea-8c4f-11eb-3a7a-793d0a056f80
 function counts2(data::Vector)
 	
-	return missing
+	dct = counts(data)
+	
+	ks = collect(keys(dct))
+	vs = collect(values(dct))
+	
+	perm = sortperm(ks)
+	
+	return (ks[perm],vs[perm])
 end
 
 # ╔═╡ 37294d02-8c4f-11eb-141e-0be49ea07611
@@ -167,7 +182,13 @@ We will use this function in the rest of the exercises.
 # ╔═╡ 447bc642-8c4f-11eb-1d4f-750e883b81fb
 function probability_distribution(data::Vector)
 	
-	return missing
+	# [2, 2, 1] ./ 5
+	ks = counts2(data)[1]
+	vs = counts2(data)[2]
+	
+	normalized = vs ./ sum(vs)
+	
+	return (ks,normalized)
 end
 
 # ╔═╡ 6b1dc96a-8c4f-11eb-27ca-ffba02520fec
@@ -261,7 +282,7 @@ md"""
 # ╔═╡ 0233835a-8c50-11eb-01e7-7f80bd27683e
 function bernoulli(p::Real)
 	
-	return missing
+	return rand()<p
 end
 
 # ╔═╡ fdb3f1c8-8c4f-11eb-2281-bf01205bb804
@@ -273,10 +294,16 @@ md"""
 
 # ╔═╡ 08028df8-8c50-11eb-3b22-fdf5104a4d52
 function geometric(p::Real)
-	
-	
-	return missing
+	t = 0
+	while true
+		t += 1
+		if bernoulli(p)
+			break
+		end
+	end
+	return t
 end
+
 
 # ╔═╡ 2b35dc1c-8c50-11eb-3517-83589f2aa8cc
 geometric(0.25)
@@ -299,9 +326,7 @@ md"""
 """
 
 # ╔═╡ 370ec1dc-8688-443c-bf57-dd1b2a42a5fa
-interpretation_of_p_equals_one = md"""
-blablabla
-"""
+interpretation_of_p_equals_one = geometric(1)
 
 # ╔═╡ fdb46c72-8c4f-11eb-17a2-8b7628b5d3b3
 md"""
@@ -312,7 +337,7 @@ md"""
 # ╔═╡ 32700660-8c50-11eb-2fdf-5d9401c07de3
 function experiment(p::Real, N::Integer)
 	
-	return missing
+	return [ geometric(p) for i= 1:N ]
 end
 
 # ╔═╡ 192caf02-5234-4379-ad74-a95f3f249a72
@@ -342,7 +367,10 @@ md"""
 """
 
 # ╔═╡ 25ae71d0-e6e2-45ff-8900-3caf6fcea937
-
+function meanTime(data::Vector)
+	keys, times = counts2(data)
+	return sum([ keys[i]*times[i] for i=1:length(keys)])/sum(times)
+end
 
 # ╔═╡ 3a7c7ca2-e879-422e-a681-d7edd271c018
 md"""
@@ -353,8 +381,9 @@ Note that `vline!` requires a *vector* of values where you wish to draw vertical
 
 # ╔═╡ 97d7d154-8c50-11eb-2fdd-fdf0a4e402d3
 let
-	
-	# your code here
+	xs, ps = probability_distribution(large_experiment)
+	bar(xs, ps, alpha=0.5, leg=false)	
+	vline!([meanTime(large_experiment)],ls=:dash)
 end
 
 # ╔═╡ b1287960-8c50-11eb-20c3-b95a2a1b8de5
@@ -398,7 +427,10 @@ md"""
 """
 
 # ╔═╡ 1b1f870f-ee4d-497f-8d4b-1dba737be075
-
+let
+	xs, ps = probability_distribution(large_experiment)
+	bar(xs, ps, alpha=0.5, leg=false,yaxis=:log)
+end
 
 # ╔═╡ fdcb1c1a-8c4f-11eb-0aeb-3fae27eaacbd
 md"""
@@ -416,25 +448,23 @@ As you vary $p$, what do you observe? Does that make sense?
 hello
 
 # ╔═╡ 48751015-c374-4a77-8a00-bca81bbc8305
+@bind prob Slider( 0.1 : 0.001 : 1 )
 
+# ╔═╡ cfa0223f-9b22-4bdf-a2ab-2a11fbca331f
+prob
 
 # ╔═╡ 562202be-5eac-46a4-9542-e6593bc39ff9
+@bind N Slider( 0 : 1 : 10^6 )
 
+# ╔═╡ 08be6e3a-c221-4f7d-b94c-12a247e2741d
+N
 
 # ╔═╡ e8d2a4ab-b710-4c16-ab71-b8c1e71fe442
-
-
-# ╔═╡ a486dc37-609d-4aae-b4ec-71de726191c7
-
-
-# ╔═╡ 65ea5492-d833-4754-89a3-0aa671c3ec7a
-
-
-# ╔═╡ 264089bc-aa30-450f-89f7-ffd589eee13c
-
-
-# ╔═╡ 0be83efa-e94f-4397-829f-24f705b044b1
-
+let
+	xs, ps = probability_distribution(experiment(prob,N))
+		
+	bar(xs, ps, alpha=0.5, leg=false)	
+end
 
 # ╔═╡ fdd5d98e-8c4f-11eb-32bc-51bc1db98930
 md"""
@@ -442,29 +472,32 @@ md"""
 👉 For fixed $N = 10,000$, write a function that calculates the *mean* time to recover, $\langle \tau(p) \rangle$, as a function of $p$.
 """
 
-# ╔═╡ 406c9bfa-409d-437c-9b86-fd02fdbeb88f
-
-
 # ╔═╡ f8b982a7-7246-4ede-89c8-b2cf183470e9
 md"""
 👉 Use plots of your function to find the relationship between $\langle \tau(p) \rangle$ and $p$.
 """
 
+# ╔═╡ f25788d2-9352-44f4-88eb-0fbc5d918785
+@bind p2 Slider( 0.001 : 0.001 : 1 )
+
+# ╔═╡ dc072ba8-8a99-4404-9738-2add68a059e2
+p2
+
+# ╔═╡ dec74169-1262-4be0-8a90-c7135bc81468
+new_exp = experiment(p2,10^4)
+
 # ╔═╡ caafed37-0b3b-4f6c-919f-f16df7248c23
+adj_mean_time = meanTime(new_exp)
 
-
-# ╔═╡ 501bcc30-f96f-42e4-a5aa-09a4138b5b72
-
-
-# ╔═╡ b763b6e8-8221-4b08-9a8e-8d5e63cbd144
-
+# ╔═╡ 54eb02f3-b70d-4626-b46d-ed9d6d44e5fc
+p2*adj_mean_time
 
 # ╔═╡ d2e4185e-8c51-11eb-3c31-637902456634
 md"""
 Based on my observations, it looks like we have the following relationship:
 
 ```math
-\langle \tau(p) \rangle = my \cdot answer \cdot here
+\langle \tau(p) \rangle = \frac{1}{p}
 ```
 """
 
@@ -489,6 +522,7 @@ md"""
 Ps = let 
 	
 	# your code here
+	[0.25*(1-0.25)^(i-1) for i=1:50]
 end
 
 # ╔═╡ dd80b2eb-e4c3-4b2f-ad5c-526a241ac5e6
@@ -498,7 +532,7 @@ md"""
 """
 
 # ╔═╡ 3df70c76-1aa6-4a0c-8edf-a6e3079e406b
-
+sum(Ps)
 
 # ╔═╡ b1ef5e8e-8c52-11eb-0d95-f7fa123ee3c9
 md"""
@@ -510,10 +544,13 @@ md"""
 md"""
 
 ```math
-\sum_{k=1}^{\infty} P_k = \dots your \cdot answer \cdot here \dots = 1
 
+\sum_{k=1}^{\infty} P_k = 
+p(1 + (1-p) + (1-p)^2 + ...+(1-p)^{\infty}) = p \times \frac{1}{1- (1-p)} = 1
 ```
 """
+
+
 
 # ╔═╡ 1b6035fb-d8fc-437f-b75e-f1a6b3b4cae7
 md"""
@@ -525,8 +562,16 @@ md"""
 👉 Plot $P_n$ as a function of $n$. Compare it to the corresponding result from the previous exercise (i.e. plot them both on the same graph).
 	"""
 
-# ╔═╡ dd59f48c-bb22-47b2-8acf-9c4ee4457cb9
+# ╔═╡ 0e6ae68a-6529-4f30-bd0c-ada2c09b03f9
+function Pn(n::Real, p::Real)
+	[ p*(1-p)^(i-1) for i in 1:n ]
+end
 
+# ╔═╡ 5a2343d7-194c-4c54-8fe3-760ed62cce23
+let
+	plot(Pn(50,0.25))
+	plot!(Ps)
+end
 
 # ╔═╡ 5907dc0a-de60-4b58-ac4b-1e415f0051d2
 md"""
@@ -534,7 +579,7 @@ md"""
 	"""
 
 # ╔═╡ c7093f08-52d2-4f22-9391-23bd196c6fb9
-
+# abs(y2-y1)
 
 # ╔═╡ 316f369a-c051-4a35-9c64-449b12599295
 md"""
@@ -559,8 +604,15 @@ md"""
 
 # ╔═╡ 5185c938-8c53-11eb-132d-83342e0c775f
 function cumulative_sum(xs::Vector)
+	temp = 0
+	result =zeros(length(xs))
 	
-	return missing
+	for i in 1:length(xs)
+		result[i] = xs[i]+temp
+		temp += xs[i]
+	end
+	
+	return result
 end
 
 # ╔═╡ e4095d34-552e-495d-b318-9afe6839d577
@@ -575,7 +627,7 @@ md"""
 cumulative = cumulative_sum(Ps)
 
 # ╔═╡ e649c914-dd28-4194-9393-4dc8836f3743
-
+plot(cumulative )
 
 # ╔═╡ fa59099a-8c52-11eb-37a7-291f80ea0406
 md"""
@@ -586,7 +638,7 @@ md"""
 # ╔═╡ 1ae91530-c77e-4d92-9ad3-c969bc7e1fa8
 md"""
 ```math
-C_n := \sum_{k=1}^n P_k = my \cdot answer \cdot here
+C_n := \sum_{k=1}^n P_k =p\times\frac{1-(1-p)^n}{p} = 1-(1-p)^n
 ```
 """
 
@@ -601,7 +653,7 @@ md"""
 # ╔═╡ 16b4e98c-4ae7-4145-addf-f43a0a96ec82
 md"""
 ```math
-n(r,p) = my \cdot answer \cdot here
+n(r,p) =  \frac{ln(1-r)}{ln(1-p)}
 ```
 """
 
@@ -613,10 +665,12 @@ md"""
 """
 
 # ╔═╡ 47d56992-8c54-11eb-302a-eb3153978d26
-function geometric_bin(u::Real, p::Real)
-	
-	return missing
+function geometric_bin(r::Real, p::Real)
+	floor(log(1-r)/log(1-p))
 end
+
+# ╔═╡ 03313528-9733-4eff-8397-c9c15c86c596
+geometric_bin(0.25, 0.5)
 
 # ╔═╡ adfb343d-beb8-4576-9f2a-d53404cee42b
 md"""
@@ -627,7 +681,7 @@ We can use this to define a **fast** version of the `geomtric` function:
 geometric_fast(p) = geometric_bin(rand(), p)
 
 # ╔═╡ b3b11113-2f0c-45d2-a14e-011a61ae8e9b
-geometric_fast(0.25)
+geometric_fast(0.05)
 
 # ╔═╡ fc681dde-8c52-11eb-07fa-7d0ef9f22e93
 md"""
@@ -636,10 +690,10 @@ md"""
 """
 
 # ╔═╡ 1d007d99-2526-4c19-9c96-3fad1750670e
-
+ans3_7 = [geometric_fast(10^(-10)) for i=1:10_000 ]
 
 # ╔═╡ c37bbb1f-8f5e-4097-9104-43ef65aa1cbd
-
+histogram(ans3_7)
 
 # ╔═╡ 79eb5e14-8c54-11eb-3c8c-dfeba16305b2
 md"""
@@ -663,7 +717,24 @@ md"""
 # ╔═╡ 2270e6ba-8c5e-11eb-3600-615519daa5e0
 function atmosphere(p::Real, y0::Real, N::Integer)
 	
-	return missing
+	h = y0
+	
+	for i = 1:N
+		if rand() > (1-p)
+			h += 1
+		else
+
+			if h == 1
+				h=1
+			else
+				h -= 1
+			end
+			
+
+		end
+
+	end
+	return h
 end
 
 # ╔═╡ 225bbcbd-0628-4151-954e-9a85d1020fd9
@@ -678,14 +749,8 @@ Let's simulate it for $10^7$ time steps with $x_0 = 10$ and $p=0.55$.
 👉 Calculate and plot the probability distribution of the walker's height.
 """
 
-# ╔═╡ deb5fbfb-1e03-42ce-a6d6-c8d3edd89a9a
-
-
-# ╔═╡ 8517f92b-d4d3-46b5-9b9a-e609175b6481
-
-
 # ╔═╡ c1e3f066-5e12-4018-9fb2-4e7fc13172ba
-
+plot([atmosphere(0.55, 10, 50) for i=1:10])
 
 # ╔═╡ 1dc68e2e-8c5e-11eb-3486-454d58ac9c87
 md"""
@@ -704,9 +769,15 @@ md"""
 """
 
 # ╔═╡ d3bec73d-0106-496d-93ae-e1e26534b8c7
+@bind pee Slider( 0.000001 : 0.01 : 1, default = 0.55, show_value=true)
 
 
 # ╔═╡ d972be1f-a8ad-43ed-a90d-bca358d812c2
+@bind y0 Slider( 0 : 1 : 100, default = 10, show_value=true)
+
+
+# ╔═╡ d0534a5f-d200-4f1a-ba96-549e4ebc7c3f
+@bind t Slider( 1 : 1 : 1000, default = 100, show_value=true)
 
 
 # ╔═╡ de83ffd6-cd0c-4b78-afe4-c0bcc54471d7
@@ -715,7 +786,10 @@ md"""
 """
 
 # ╔═╡ fe45b8de-eb3f-43ca-9d63-5c01d0d27671
-
+let 
+	xs, ps = probability_distribution([atmosphere(pee, y0, t) for i = 1:10000])
+	bar(xs, ps, orientation=:h)
+end
 
 # ╔═╡ 5aabbec1-a079-4936-9cd1-9c25fe5700e6
 md"## Function library
@@ -1069,18 +1143,17 @@ end
 # ╠═d5b29c53-baff-4529-b2c1-776afe000d38
 # ╠═9a92eba4-ad68-4c53-a242-734718aeb3f1
 # ╠═48751015-c374-4a77-8a00-bca81bbc8305
+# ╠═cfa0223f-9b22-4bdf-a2ab-2a11fbca331f
 # ╠═562202be-5eac-46a4-9542-e6593bc39ff9
+# ╠═08be6e3a-c221-4f7d-b94c-12a247e2741d
 # ╠═e8d2a4ab-b710-4c16-ab71-b8c1e71fe442
-# ╠═a486dc37-609d-4aae-b4ec-71de726191c7
-# ╠═65ea5492-d833-4754-89a3-0aa671c3ec7a
-# ╠═264089bc-aa30-450f-89f7-ffd589eee13c
-# ╠═0be83efa-e94f-4397-829f-24f705b044b1
 # ╟─fdd5d98e-8c4f-11eb-32bc-51bc1db98930
-# ╠═406c9bfa-409d-437c-9b86-fd02fdbeb88f
 # ╟─f8b982a7-7246-4ede-89c8-b2cf183470e9
+# ╠═f25788d2-9352-44f4-88eb-0fbc5d918785
+# ╠═dc072ba8-8a99-4404-9738-2add68a059e2
+# ╠═dec74169-1262-4be0-8a90-c7135bc81468
 # ╠═caafed37-0b3b-4f6c-919f-f16df7248c23
-# ╠═501bcc30-f96f-42e4-a5aa-09a4138b5b72
-# ╠═b763b6e8-8221-4b08-9a8e-8d5e63cbd144
+# ╠═54eb02f3-b70d-4626-b46d-ed9d6d44e5fc
 # ╠═d2e4185e-8c51-11eb-3c31-637902456634
 # ╟─06412687-b44d-4a69-8d6c-0cf4eb51dfad
 # ╟─a82728c4-8c4c-11eb-31b8-8bc5fcd8afb7
@@ -1092,7 +1165,8 @@ end
 # ╠═a3f08480-4b2b-46f2-af4a-14270869e766
 # ╟─1b6035fb-d8fc-437f-b75e-f1a6b3b4cae7
 # ╟─c3cb9ea0-5e0e-4d5a-ab23-80ed8d91209c
-# ╠═dd59f48c-bb22-47b2-8acf-9c4ee4457cb9
+# ╠═0e6ae68a-6529-4f30-bd0c-ada2c09b03f9
+# ╠═5a2343d7-194c-4c54-8fe3-760ed62cce23
 # ╟─5907dc0a-de60-4b58-ac4b-1e415f0051d2
 # ╠═c7093f08-52d2-4f22-9391-23bd196c6fb9
 # ╟─316f369a-c051-4a35-9c64-449b12599295
@@ -1111,6 +1185,7 @@ end
 # ╠═16b4e98c-4ae7-4145-addf-f43a0a96ec82
 # ╟─fa671c06-8c52-11eb-20e0-85e2abb4ecc7
 # ╠═47d56992-8c54-11eb-302a-eb3153978d26
+# ╠═03313528-9733-4eff-8397-c9c15c86c596
 # ╟─a81516e8-0099-414e-9f2c-ab438764348e
 # ╟─adfb343d-beb8-4576-9f2a-d53404cee42b
 # ╠═5b7f2a91-a4f0-49f7-b8cf-6f677104d3e1
@@ -1124,14 +1199,13 @@ end
 # ╠═2270e6ba-8c5e-11eb-3600-615519daa5e0
 # ╠═225bbcbd-0628-4151-954e-9a85d1020fd9
 # ╟─1dc5daa6-8c5e-11eb-1355-b1f627d04a18
-# ╠═deb5fbfb-1e03-42ce-a6d6-c8d3edd89a9a
-# ╠═8517f92b-d4d3-46b5-9b9a-e609175b6481
 # ╠═c1e3f066-5e12-4018-9fb2-4e7fc13172ba
 # ╟─1dc68e2e-8c5e-11eb-3486-454d58ac9c87
 # ╠═bb8f69fd-c704-41ca-9328-6622d390f71f
 # ╟─1dc7389c-8c5e-11eb-123a-7f59dc6504cf
 # ╠═d3bec73d-0106-496d-93ae-e1e26534b8c7
 # ╠═d972be1f-a8ad-43ed-a90d-bca358d812c2
+# ╠═d0534a5f-d200-4f1a-ba96-549e4ebc7c3f
 # ╟─de83ffd6-cd0c-4b78-afe4-c0bcc54471d7
 # ╠═fe45b8de-eb3f-43ca-9d63-5c01d0d27671
 # ╟─a5234680-8b02-11eb-2574-15489d0d49ea
