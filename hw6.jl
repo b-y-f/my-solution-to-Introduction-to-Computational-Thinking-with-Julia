@@ -720,7 +720,7 @@ function atmosphere(p::Real, y0::Real, N::Integer)
 	h = y0
 	
 	for i = 1:N
-		if rand() > (1-p)
+		if rand() > p
 			h += 1
 		else
 
@@ -738,7 +738,7 @@ function atmosphere(p::Real, y0::Real, N::Integer)
 end
 
 # ╔═╡ 225bbcbd-0628-4151-954e-9a85d1020fd9
-atmosphere(0.8, 10, 50)
+atmosphere(0.55, 10, 2)
 
 # ╔═╡ 1dc5daa6-8c5e-11eb-1355-b1f627d04a18
 md"""
@@ -750,7 +750,10 @@ Let's simulate it for $10^7$ time steps with $x_0 = 10$ and $p=0.55$.
 """
 
 # ╔═╡ c1e3f066-5e12-4018-9fb2-4e7fc13172ba
-plot([atmosphere(0.55, 10, 50) for i=1:10])
+let 
+	xs, ps = probability_distribution([atmosphere(0.55, 10, 500) for i = 1:1000000])
+	plot(xs, ps)
+end
 
 # ╔═╡ 1dc68e2e-8c5e-11eb-3486-454d58ac9c87
 md"""
@@ -758,7 +761,7 @@ md"""
 """
 
 # ╔═╡ bb8f69fd-c704-41ca-9328-6622d390f71f
-
+# log
 
 # ╔═╡ 1dc7389c-8c5e-11eb-123a-7f59dc6504cf
 md"""
@@ -769,7 +772,7 @@ md"""
 """
 
 # ╔═╡ d3bec73d-0106-496d-93ae-e1e26534b8c7
-@bind pee Slider( 0.000001 : 0.01 : 1, default = 0.55, show_value=true)
+@bind p Slider( 0.000001 : 0.01 : 1, default = 0.55, show_value=true)
 
 
 # ╔═╡ d972be1f-a8ad-43ed-a90d-bca358d812c2
@@ -777,7 +780,7 @@ md"""
 
 
 # ╔═╡ d0534a5f-d200-4f1a-ba96-549e4ebc7c3f
-@bind t Slider( 1 : 1 : 1000, default = 100, show_value=true)
+@bind c Slider( 1 : 1 : 1000, default = 100, show_value=true)
 
 
 # ╔═╡ de83ffd6-cd0c-4b78-afe4-c0bcc54471d7
@@ -787,7 +790,7 @@ md"""
 
 # ╔═╡ fe45b8de-eb3f-43ca-9d63-5c01d0d27671
 let 
-	xs, ps = probability_distribution([atmosphere(pee, y0, t) for i = 1:10000])
+	xs, ps = probability_distribution([atmosphere(p, y0, c) for i = 1:10000])
 	bar(xs, ps, orientation=:h)
 end
 
@@ -1055,15 +1058,15 @@ bigbreak
 # ╔═╡ a5234680-8b02-11eb-2574-15489d0d49ea
 bigbreak
 
-# ╔═╡ 2962c6da-feda-4d65-918b-d3b178a18fa0
-begin
-	fruits = ["🍒", "🍐", "🍋"]
-	length(fruits)
-end
-
 # ╔═╡ 887a5106-c44a-4437-8c6f-04ad6610738a
 begin
 	fruits = ["🍉"]
+	length(fruits)
+end
+
+# ╔═╡ 2962c6da-feda-4d65-918b-d3b178a18fa0
+begin
+	fruits = ["🍒", "🍐", "🍋"]
 	length(fruits)
 end
 
