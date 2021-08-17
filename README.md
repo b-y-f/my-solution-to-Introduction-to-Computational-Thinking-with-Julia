@@ -8,3 +8,4 @@ My solution to online [course](https://computationalthinking.mit.edu/Spring21/#i
 - [HW3](https://byfsdhr.github.io/my-solution-to-Introduction-to-Computational-Thinking-with-Julia/hw3.jl.html)
 - [HW4](https://byfsdhr.github.io/my-solution-to-Introduction-to-Computational-Thinking-with-Julia/hw4.jl.html)
 - [HW5](https://byfsdhr.github.io/my-solution-to-Introduction-to-Computational-Thinking-with-Julia/hw5.jl.html)
+- [HW6](https://byfsdhr.github.io/my-solution-to-Introduction-to-Computational-Thinking-with-Julia/hw6.jl.html)
