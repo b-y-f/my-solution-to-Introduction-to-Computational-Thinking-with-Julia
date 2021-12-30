@@ -1,0 +1,11 @@
+
+version: '1.0'
+
+services:
+  notebook:
+    image: plutojl/pluto
+    container_name: pluto
+    ports:
+      - 1234:1234
+    volumes:
+      - .:/home/pluto/notebooks
