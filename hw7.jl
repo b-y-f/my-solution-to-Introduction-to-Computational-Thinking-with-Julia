@@ -121,7 +121,7 @@ For each agent we want to keep track of its infection status and the number of *
 # ╔═╡ ae4ac4b4-041f-11eb-14f5-1bcde35d18f2
 mutable struct Agent
 	status::InfectionStatus
-	num_infected::Int64
+	num_infected::Int64	
 end
 
 # ╔═╡ ae70625a-041f-11eb-3082-0753419d6d57
@@ -152,19 +152,12 @@ Let's check that the new method works correctly. How many methods does the const
 
 """
 
-# ╔═╡ a8d71677-51a9-43f7-bd4b-77e634800f9e
-mutable struct Agent2
-	status::InfectionStatus 
-	num_infected::Int64 
-	function Agent2()
-    	status = S
-		num_infected = 0
-    	return new(status, num_infected)
-   	end
-end
+# ╔═╡ bc46d6d6-b105-46bf-bdc7-fe027e37a90a
+# define of outside method for different parameters
+Agent_e() = Agent(S, 0)
 
 # ╔═╡ 82f2580a-04c8-11eb-1eea-bdb4e50eee3b
-Agent2()
+Agent_e()
 
 # ╔═╡ 8631a536-0403-11eb-0379-bb2e56927727
 md"""
@@ -176,6 +169,7 @@ md"""
 # ╔═╡ 98beb336-0425-11eb-3886-4f8cfd210288
 function set_status!(agent::Agent, new_status::InfectionStatus)
 	# your code here
+	agent.status = new_status
 end
 
 # ╔═╡ 866299e8-0403-11eb-085d-2b93459cc141
@@ -187,13 +181,13 @@ md"""
 # ╔═╡ 9a837b52-0425-11eb-231f-a74405ff6e23
 function is_susceptible(agent::Agent)
 	
-	return missing
+	return agent.status == S 
 end
 
 # ╔═╡ a8dd5cae-0425-11eb-119c-bfcbf832d695
 function is_infected(agent::Agent)
 	
-	return missing
+	return agent.status == I
 end
 
 # ╔═╡ 8692bf42-0403-11eb-191f-b7d08895274f
@@ -205,8 +199,10 @@ md"""
 
 # ╔═╡ 7946d83a-04a0-11eb-224b-2b315e87bc84
 function generate_agents(N::Integer)
-	
-	return missing
+	list = [ Agent(S,0) for i=1:N]
+	pick = rand(1:3)
+	list[pick] = Agent(I,0)
+	return list
 end
 
 # ╔═╡ 488771e2-049f-11eb-3b0a-0de260457731
@@ -244,6 +240,20 @@ $(html"<span id=interactfunction></span>")
 function interact!(agent::Agent, source::Agent, infection::InfectionRecovery)
 	
 	# your code here
+	if is_susceptible(agent) && is_infected(source)
+		if bernoulli(infection.p_infection) 
+			if bernoulli(infection.p_recovery)
+				agent.status = R
+			end
+			agent.status = I
+			source.num_infected += 1
+		end
+	elseif is_infected(agent)
+		agent.status = I
+		if bernoulli(infection.p_recovery)
+			agent.status = R
+		end
+	end
 end
 
 # ╔═╡ b21475c6-04ac-11eb-1366-f3b5e967402d
@@ -256,9 +266,8 @@ let
 	agent = Agent(S, 0)
 	source = Agent(I, 0)
 	infection = InfectionRecovery(0.9, 0.5)
-	
 	interact!(agent, source, infection)
-	
+
 	(agent=agent, source=source)
 end
 
@@ -734,7 +743,7 @@ bigbreak
 # ╟─189cae1e-0424-11eb-2666-65bf297d8bdd
 # ╠═18d308c4-0424-11eb-176d-49feec6889cf
 # ╟─190deebc-0424-11eb-19fe-615997093e14
-# ╠═a8d71677-51a9-43f7-bd4b-77e634800f9e
+# ╠═bc46d6d6-b105-46bf-bdc7-fe027e37a90a
 # ╠═82f2580a-04c8-11eb-1eea-bdb4e50eee3b
 # ╟─8631a536-0403-11eb-0379-bb2e56927727
 # ╠═98beb336-0425-11eb-3886-4f8cfd210288
