@@ -190,6 +190,12 @@ function is_infected(agent::Agent)
 	return agent.status == I
 end
 
+# ╔═╡ c88bb492-9cd7-4250-85bb-a0325832ecae
+function is_recovered(agent::Agent)
+	
+	return agent.status == R
+end
+
 # ╔═╡ 8692bf42-0403-11eb-191f-b7d08895274f
 md"""
 #### Exericse 1.4
@@ -293,7 +299,15 @@ You should not use any global variables inside the functions: Each function must
 
 # ╔═╡ 2ade2694-0425-11eb-2fb2-390da43d9695
 function step!(agents::Vector{Agent}, infection::InfectionRecovery)
+	source = rand(agents)
+	agent = rand(agents)
 	
+	# while rand(1:l)== agent_index
+	# 	source_index = rand(1:l)
+	# end
+	
+	interact!(agent, source, infection)
+	agents	
 end
 
 # ╔═╡ 955321de-0403-11eb-04ce-fb1670dfbb9e
@@ -303,7 +317,10 @@ md"""
 
 # ╔═╡ 46133a74-04b1-11eb-0b46-0bc74e564680
 function sweep!(agents::Vector{Agent}, infection::AbstractInfection)
-	
+	n = length(agents)
+	for i in 1:n
+		step!(agents,infection)
+	end
 end
 
 # ╔═╡ 95771ce2-0403-11eb-3056-f1dc3a8b7ec3
@@ -323,8 +340,18 @@ _Feel free to store the counts in a different way, as long as the return type is
 
 # ╔═╡ 887d27fc-04bc-11eb-0ab9-eb95ef9607f8
 function simulation(N::Integer, T::Integer, infection::AbstractInfection)
-
-	return (S=missing, I=missing, R=missing)
+	
+	agents = generate_agents(N)
+	# println(agents)
+	s,i,r =[],[],[]
+	for _ in 1:T
+		sweep!(agents,infection)
+		push!(s, count(is_susceptible, agents))
+		push!(i,count(is_infected,agents))
+		push!(r, count(is_recovered, agents))
+	end
+	
+	return (S=s,I=i,R=r)
 end
 
 # ╔═╡ b92f1cec-04ae-11eb-0072-3535d1118494
@@ -339,7 +366,7 @@ simulation(100, 1000, InfectionRecovery(0.005, 0.2))
 # ╔═╡ c5156c72-04af-11eb-1106-b13969b036ca
 let
 	run_basic_sir
-	
+
 	N = 100
 	T = 1000
 	sim = simulation(N, T, InfectionRecovery(0.02, 0.002))
@@ -369,24 +396,10 @@ function repeat_simulations(N, T, infection, num_simulations)
 	end
 end
 
-# ╔═╡ 80c2cd88-04b1-11eb-326e-0120a39405ea
-simulations = repeat_simulations(100, 1000, InfectionRecovery(0.02, 0.002), 20)
-
 # ╔═╡ 80e6f1e0-04b1-11eb-0d4e-475f1d80c2bb
 md"""
 In the cell below, we plot the evolution of the number of $I$ individuals as a function of time for each of the simulations on the same plot using transparency (`alpha=0.5` inside the plot command).
 """
-
-# ╔═╡ 9cd2bb00-04b1-11eb-1d83-a703907141a7
-let
-	p = plot()
-	
-	for sim in simulations
-		plot!(p, 1:1000, sim.I, alpha=.5, label=nothing)
-	end
-	
-	p
-end
 
 # ╔═╡ 95c598d4-0403-11eb-2328-0175ed564915
 md"""
@@ -398,7 +411,46 @@ function sir_mean_plot(simulations::Vector{<:NamedTuple})
 	# you might need T for this function, here's a trick to get it:
 	T = length(first(simulations).S)
 	
-	return missing
+	S_counts = map(i -> i.S, simulations)
+	I_counts = map(i -> i.I, simulations)
+	R_counts = map(i -> i.R, simulations)
+	
+	S=round.(sum(S_counts) ./ length(simulations) ./ 100, digits=4)
+	I=round.(sum(I_counts) ./ length(simulations) ./ 100, digits=4)
+	R=round.(sum(R_counts) ./ length(simulations) ./ 100, digits=4)
+
+	p = plot()
+
+	plot!(p, 1:T, S, label="S")
+	plot!(p, 1:T, I, label="I")
+	plot!(p, 1:T, R, label="R")
+	
+	return p
+end
+
+# ╔═╡ dfb99ace-04cf-11eb-0739-7d694c837d59
+md"""
+👉 Allow $p_\text{infection}$ and $p_\text{recovery}$ to be changed interactively and find parameter values for which you observe an epidemic outbreak.
+"""
+
+# ╔═╡ 1c6aa208-04d1-11eb-0b87-cf429e6ff6d0
+@bind i_rate Slider(0:0.02:1,show_value=true,default=0.02)
+
+# ╔═╡ d0c1a170-a34b-44dc-ae4b-b3b7dfaa23f8
+@bind r_rate Slider(0:0.002:1,show_value=true,default=0.002)
+
+# ╔═╡ 80c2cd88-04b1-11eb-326e-0120a39405ea
+simulations = repeat_simulations(100, 1000, InfectionRecovery(i_rate,r_rate), 20)
+
+# ╔═╡ 9cd2bb00-04b1-11eb-1d83-a703907141a7
+let
+	p = plot()
+	
+	for sim in simulations
+		plot!(p, 1:1000, sim.I, alpha=.5, label=nothing)
+	end
+	
+	p
 end
 
 # ╔═╡ 7f635722-04d0-11eb-3209-4b603c9e843c
@@ -418,14 +470,6 @@ let
 	
 end
 
-# ╔═╡ dfb99ace-04cf-11eb-0739-7d694c837d59
-md"""
-👉 Allow $p_\text{infection}$ and $p_\text{recovery}$ to be changed interactively and find parameter values for which you observe an epidemic outbreak.
-"""
-
-# ╔═╡ 1c6aa208-04d1-11eb-0b87-cf429e6ff6d0
-
-
 # ╔═╡ 95eb9f88-0403-11eb-155b-7b2d3a07cff0
 md"""
 👉 Write a function `sir_mean_error_plot` that does the same as `sir_mean_plot`, which also computes the **standard deviation** $\sigma$ of $S$, $I$, $R$ at each step. Add this to the plot using **error bars**, using the option `yerr=σ` in the plot command; use transparency.
@@ -441,6 +485,9 @@ function sir_mean_error_plot(simulations::Vector{<:NamedTuple})
 	return missing
 end
 
+# ╔═╡ 7ff0aaa7-88e6-4925-81c0-2c1893876b41
+sir_mean_error_plot(simulations)
+
 # ╔═╡ 9611ca24-0403-11eb-3582-b7e3bb243e62
 md"""
 #### Exercise 2.3
@@ -450,7 +497,7 @@ md"""
 """
 
 # ╔═╡ 26e2978e-0435-11eb-0d61-25f552d2771e
-
+histogram(simulations[2].I,bins=0:100)
 
 # ╔═╡ 9635c944-0403-11eb-3982-4df509f6a556
 md"""
@@ -751,6 +798,7 @@ bigbreak
 # ╟─866299e8-0403-11eb-085d-2b93459cc141
 # ╠═9a837b52-0425-11eb-231f-a74405ff6e23
 # ╠═a8dd5cae-0425-11eb-119c-bfcbf832d695
+# ╠═c88bb492-9cd7-4250-85bb-a0325832ecae
 # ╟─c4a8694a-04d4-11eb-1eef-c9e037e6b21f
 # ╟─8692bf42-0403-11eb-191f-b7d08895274f
 # ╠═7946d83a-04a0-11eb-224b-2b315e87bc84
@@ -788,8 +836,10 @@ bigbreak
 # ╠═a4c9ccdc-12ca-11eb-072f-e34595520548
 # ╟─dfb99ace-04cf-11eb-0739-7d694c837d59
 # ╠═1c6aa208-04d1-11eb-0b87-cf429e6ff6d0
+# ╠═d0c1a170-a34b-44dc-ae4b-b3b7dfaa23f8
 # ╟─95eb9f88-0403-11eb-155b-7b2d3a07cff0
 # ╠═287ee7aa-0435-11eb-0ca3-951dbbe69404
+# ╠═7ff0aaa7-88e6-4925-81c0-2c1893876b41
 # ╟─9611ca24-0403-11eb-3582-b7e3bb243e62
 # ╠═26e2978e-0435-11eb-0d61-25f552d2771e
 # ╟─9635c944-0403-11eb-3982-4df509f6a556
